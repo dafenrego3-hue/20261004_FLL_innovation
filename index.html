@@ -13,6 +13,24 @@
         <p>生物多様性を知り、つなげ、未来のアイデアへ</p>
     </header>
     <main>
+        <h2>生物を登録する</h2>
+        <form id="animalForm">
+            <label>
+                名前(必須)
+                <input type="text" id="nameInput" required>
+            </label>
+            <label>
+                地域(必須)
+                <input type="text" id="areaInput" required>
+            </label>
+            <label>
+                説明
+                <textarea id="descriptionInput" rows="3"></textarea>
+            </label>
+            <button type="submit" id="submitButton">登録する</button>
+            <p id="message"></p>
+        </form>
+
         <h2>生物一覧</h2>
         <button id="loadButton">
             生物データを読み込む
