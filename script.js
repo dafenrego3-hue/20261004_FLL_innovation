@@ -3,15 +3,22 @@ const SUPABASE_KEY = "sb_publishable_TWsX9lEaok49Kwcrt_vOhg_LICb91sU";
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 生物データを取得
-async function loadAnimals() {
-    console.log("ボタンが押されました");
+const animalList = document.getElementById("animalList");
+const animalForm = document.getElementById("animalForm");
+const submitButton = document.getElementById("submitButton");
+const message = document.getElementById("message");
 
+// メッセージ表示(成功:緑 / 失敗:赤)
+function showMessage(text, isError = false) {
+    message.textContent = text;
+    message.className = isError ? "error" : "success";
+}
+
+// 生物データを取得して表示
+async function loadAnimals() {
     const { data, error } = await supabaseClient
         .from("animal")
         .select("*");
-
-    console.log("data:", data, "error:", error);
 
     if (error) {
         console.error(error);
@@ -19,7 +26,6 @@ async function loadAnimals() {
         return;
     }
 
-    const animalList = document.getElementById("animalList");
     animalList.innerHTML = "";
 
     if (data.length === 0) {
@@ -30,14 +36,59 @@ async function loadAnimals() {
     data.forEach(animal => {
         const div = document.createElement("div");
         div.className = "animal";
-        div.innerHTML = `
-            <h3>${animal.name}</h3>
-            <p>地域:${animal.area}</p>
-            <p>${animal.description ?? ""}</p>
-        `;
+
+        // textContentを使い、入力された文字がHTMLとして実行されないようにする
+        const title = document.createElement("h3");
+        title.textContent = animal.name;
+
+        const area = document.createElement("p");
+        area.textContent = "地域:" + animal.area;
+
+        const description = document.createElement("p");
+        description.textContent = animal.description ?? "";
+
+        div.append(title, area, description);
         animalList.appendChild(div);
     });
 }
 
-// ボタンを押したら読み込む
+// 生物データを登録
+async function addAnimal(event) {
+    event.preventDefault(); // ページの再読み込みを防ぐ
+
+    const name = document.getElementById("nameInput").value.trim();
+    const area = document.getElementById("areaInput").value.trim();
+    const description = document.getElementById("descriptionInput").value.trim();
+
+    if (!name || !area) {
+        showMessage("名前と地域を入力してください", true);
+        return;
+    }
+
+    submitButton.disabled = true; // 二重送信を防ぐ
+    showMessage("登録中...");
+
+    const { error } = await supabaseClient
+        .from("animal")
+        .insert({
+            name: name,
+            area: area,
+            description: description || null
+        });
+
+    submitButton.disabled = false;
+
+    if (error) {
+        console.error(error);
+        showMessage("登録に失敗しました: " + error.message, true);
+        return;
+    }
+
+    showMessage("登録しました!");
+    animalForm.reset();
+    loadAnimals(); // 登録後に一覧を更新
+}
+
+// イベント登録
+animalForm.addEventListener("submit", addAnimal);
 document.getElementById("loadButton").addEventListener("click", loadAnimals);
